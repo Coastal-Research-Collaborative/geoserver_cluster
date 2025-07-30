@@ -213,9 +213,9 @@ services:
     ports:
       - 8600:8600
     healthcheck:
-      test: curl --fail -s http://localhost:8600 || exit 1
+      test: curl -s -o /dev/null -w "%{http_code}" http://localhost:8600 | grep -E "^(200|302)$$" || exit 1
       interval: 1m
-      retries: 5
+      retries: 5  
       start_period: 20s
       timeout: 10s
     deploy:
@@ -341,7 +341,7 @@ services:
     command:
       - '--housekeeping_interval=30s'
       - '--docker_only=true'
-      - '--disable_metrics=percpu,sched,tcp,udp,disk,diskIO,accelerator,hugetlb,referenced_memory,cpu_topology,resctrl'
+      - '--disable_metrics=percpu,sched,tcp,udp,disk,diskIO,hugetlb,referenced_memory,cpu_topology,resctrl'
     deploy:
       resources:
         limits:

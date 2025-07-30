@@ -25,12 +25,13 @@ NC='\033[0m' # No Color
 check_service_health() {
     local service_name=$1
     local url=$2
-    local expected_status=${3:-200}
+    local expected_status=${3:-"200,302"}
     
     echo -n "Checking $service_name... "
     
     if response=$(curl -s -w "%{http_code}" -o /dev/null --max-time 10 "$url" 2>/dev/null); then
-        if [ "$response" -eq "$expected_status" ]; then
+        # Check if response matches any of the expected status codes
+        if echo "$expected_status" | grep -q "$response"; then
             echo -e "${GREEN}✓ Healthy${NC} (HTTP $response)"
             return 0
         else
@@ -51,7 +52,7 @@ check_geoserver_cluster() {
     
     for i in $(seq 1 $total_nodes); do
         local port=$((GEOSERVER_BASE_PORT + i - 1))
-        if check_service_health "GeoServer Node $i" "http://localhost:$port/geoserver/web"; then
+        if check_service_health "GeoServer Node $i" "http://localhost:$port/geoserver/web" "302"; then
             ((healthy_nodes++))
         fi
     done
@@ -76,7 +77,7 @@ check_supporting_services() {
     local total_services=6
     
     # Check Load Balancer
-    if check_service_health "Load Balancer (Caddy)" "http://localhost:${CADDY_PORT:-8600}"; then
+    if check_service_health "Load Balancer (Caddy)" "http://localhost:${CADDY_PORT:-8600}" "200,302"; then
         ((services_healthy++))
     fi
     
@@ -89,18 +90,23 @@ check_supporting_services() {
         echo -e "PostgreSQL... ${RED}✗ Unhealthy${NC}"
     fi
     
-    # Check ActiveMQ
-    if check_service_health "ActiveMQ Broker" "http://localhost:${ACTIVEMQ_WEB_PORT:-8161}"; then
+    # Check ActiveMQ (check if broker port is listening)
+    echo -n "ActiveMQ Broker... "
+    if netstat -tln 2>/dev/null | grep -q ":61616" || \
+       docker compose exec -T geobroker netstat -tln 2>/dev/null | grep -q ":61616"; then
+        echo -e "${GREEN}✓ Healthy${NC} (port 61616 listening)"
         ((services_healthy++))
+    else
+        echo -e "${RED}✗ Unhealthy${NC} (port 61616 not accessible)"
     fi
     
     # Check Prometheus
-    if check_service_health "Prometheus" "http://localhost:${PROMETHEUS_PORT:-9090}"; then
+    if check_service_health "Prometheus" "http://localhost:${PROMETHEUS_PORT:-9090}" "200,302"; then
         ((services_healthy++))
     fi
     
     # Check Grafana
-    if check_service_health "Grafana" "http://localhost:${GRAFANA_PORT:-3000}"; then
+    if check_service_health "Grafana" "http://localhost:${GRAFANA_PORT:-3000}" "302"; then
         ((services_healthy++))
     fi
     
