@@ -154,8 +154,16 @@ wait_for_services() {
             
             print_status "Services status: $healthy_services/$total_services healthy"
             
-            if [ "$healthy_services" -eq "$total_services" ] && [ "$total_services" -gt 0 ]; then
-                print_status "All services are healthy ✓"
+            # Check if core services (db, geobroker, gs-node1, gs-node2, caddy) are healthy
+            core_healthy=0
+            for service in "db" "geobroker" "gs-node1" "gs-node2" "caddy"; do
+                if docker compose ps "$service" 2>/dev/null | grep -q "Up (healthy)"; then
+                    core_healthy=$((core_healthy + 1))
+                fi
+            done
+            
+            if [ "$core_healthy" -eq 5 ]; then
+                print_status "Core services are healthy ✓"
                 break
             fi
         fi

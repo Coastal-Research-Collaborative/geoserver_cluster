@@ -244,6 +244,7 @@ services:
       context: ./scripts/docker/build/prometheus
       dockerfile: Dockerfile
     container_name: prometheus
+    user: "65534:65534"
     volumes: 
       - ./scripts/docker/build/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
