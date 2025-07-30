@@ -1,3 +1,4 @@
 .env
 geoserver-data/
 geoserver-cache/
+*.tar.gz
