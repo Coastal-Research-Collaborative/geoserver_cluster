@@ -1,6 +1,6 @@
 :8600 {
   reverse_proxy gs-node1:8080 gs-node2:8080 {
-    lb_policy           round_robin
+    lb_policy           cookie JSESSIONID
     lb_try_duration     1s
     lb_try_interval     250ms
     health_uri          /geoserver/web
@@ -12,6 +12,9 @@
   header {
     X-Forwarded-For {remote_host}
     X-Real-IP {remote_host}
+    X-Forwarded-Proto {scheme}
+    X-Forwarded-Host {host}
+    X-Forwarded-Port {server_port}
   }
   
   log {
@@ -19,4 +22,3 @@
     format console
   }
 }
-

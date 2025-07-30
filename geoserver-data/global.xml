@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<global>
+  <settings>
+    <id>SettingsInfoImpl-3e4b9e34:15a2a54af52:-7fff</id>
+    <contact>
+      <address>123 Main Street</address>
+      <addressCity>Anytown</addressCity>
+      <addressCountry>USA</addressCountry>
+      <addressPostalCode>12345</addressPostalCode>
+      <addressState>CA</addressState>
+      <addressType>Work</addressType>
+      <contactEmail>geoserver@example.org</contactEmail>
+      <contactFacsimile>+1 555 555 5555</contactFacsimile>
+      <contactOrganization>Example Organization</contactOrganization>
+      <contactPerson>GeoServer Administrator</contactPerson>
+      <contactPosition>Administrator</contactPosition>
+      <contactVoice>+1 555 555 5555</contactVoice>
+      <onlineResource>http://localhost:8600/geoserver</onlineResource>
+    </contact>
+    <charset>UTF-8</charset>
+    <numDecimals>8</numDecimals>
+    <onlineResource>http://localhost:8600/geoserver</onlineResource>
+    <proxyBaseUrl>http://localhost:8600/geoserver</proxyBaseUrl>
+    <schemaBaseUrl>http://schemas.opengis.net</schemaBaseUrl>
+    <verbose>false</verbose>
+    <verboseExceptions>false</verboseExceptions>
+    <localWorkspaceIncludesPrefix>false</localWorkspaceIncludesPrefix>
+    <showCreatedTimeColumnsInAdminList>false</showCreatedTimeColumnsInAdminList>
+    <showModifiedTimeColumnsInAdminList>false</showModifiedTimeColumnsInAdminList>
+  </settings>
+  <jai>
+    <allowInterpolation>false</allowInterpolation>
+    <recycling>false</recycling>
+    <tilePriority>5</tilePriority>
+    <tileThreads>7</tileThreads>
+    <memoryCapacity>0.5</memoryCapacity>
+    <memoryThreshold>0.75</memoryThreshold>
+    <imageIOCache>false</imageIOCache>
+    <pngAcceleration>true</pngAcceleration>
+    <jpegAcceleration>true</jpegAcceleration>
+    <allowNativeMosaic>false</allowNativeMosaic>
+    <allowNativeWarp>false</allowNativeWarp>
+  </jai>
+  <coverageAccess>
+    <maxPoolSize>10</maxPoolSize>
+    <corePoolSize>5</corePoolSize>
+    <keepAliveTime>30000</keepAliveTime>
+    <queueType>UNBOUNDED</queueType>
+    <imageIOCacheThreshold>10240</imageIOCacheThreshold>
+  </coverageAccess>
+  <updateSequence>97</updateSequence>
+  <featureTypeCacheSize>0</featureTypeCacheSize>
+  <globalServices>true</globalServices>
+  <xmlPostRequestLogBufferSize>1024</xmlPostRequestLogBufferSize>
+</global>
