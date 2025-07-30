@@ -1,6 +1,6 @@
 :8600 {
   reverse_proxy gs-node1:8080 gs-node2:8080 {
-    lb_policy           cookie JSESSIONID
+    lb_policy           ip_hash
     lb_try_duration     1s
     lb_try_interval     250ms
     health_uri          /geoserver/web
