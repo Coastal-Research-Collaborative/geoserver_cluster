@@ -2,6 +2,8 @@ version: "3.9"
 
 volumes:
   geo-db-data:
+  prometheus-data:
+  grafana-data:
 
 networks:
   geocluster:
@@ -25,6 +27,18 @@ services:
     restart: on-failure
     healthcheck:
       test: "PGPASSWORD=${POSTGRES_PASS} pg_isready -h 127.0.0.1 -U docker -d gis"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
     networks:
       - geocluster
     labels: 
@@ -32,7 +46,6 @@ services:
 
   ### Active-MQ
   geobroker:
-    image: kartoza/activemq-docker:2.20.6
     build:
       context: ./scripts/docker/build/activemq
       dockerfile: Dockerfile
@@ -58,6 +71,15 @@ services:
       interval: 60s
       timeout: 15s
       retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
     networks:
       - geocluster
     labels: 
@@ -108,6 +130,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 100s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
     networks:
       - geocluster
     labels: 
@@ -158,6 +188,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 100s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
     networks:
       - geocluster
     labels:
@@ -165,17 +203,28 @@ services:
 
   ### Load balancer
   caddy:
-    image: caddy:latest
+    image: caddy:2.7.6-alpine
+    build:
+      context: ./scripts/docker/build/caddy
+      dockerfile: Dockerfile
     volumes:
       - ./scripts/docker/build/caddy/Caddyfile:/etc/caddy/Caddyfile
     ports:
       - 8600:8600
     healthcheck:
-      test: curl --fail -s http://localhost || exit 1
+      test: curl -s -o /dev/null -w "%{http_code}" http://localhost:8600 | grep -E "^(200|302)$$" || exit 1
       interval: 1m
-      retries: 5
+      retries: 5  
       start_period: 20s
       timeout: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.2'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
     depends_on:
       gs-node1:
         condition: service_healthy
@@ -190,20 +239,31 @@ services:
 
   ### Metric
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:v2.48.1
+    build:
+      context: ./scripts/docker/build/prometheus
+      dockerfile: Dockerfile
     container_name: prometheus
-    user: root
+    user: "65534:65534"
     volumes: 
       - ./scripts/docker/build/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
     ports:
       - 9090:9090
-    # https://rokpoto.com/adding-health-check-to-prometheus/
     healthcheck:
-      test: ["CMD", "wget", "http://localhost:9090"]
-      interval: 10s
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
       timeout: 15s
-      retries: 10
+      retries: 5
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
     networks:
       - geocluster
     labels: 
@@ -211,14 +271,31 @@ services:
 
   ### Web Based UI Visualization of Metrics
   grafana:
-    image: grafana/grafana:9.4.3
+    image: grafana/grafana:10.2.3
     container_name: grafana
     ports:
       - 3000:3000
-    user: root
+    user: "472:0"
     restart: unless-stopped
     volumes:
-      - /mnt/data/grafana:/var/lib/grafana
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
     networks:
       - geocluster
     labels:
@@ -249,21 +326,30 @@ services:
   
   ### Docker container exporter for prometheus
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
     container_name: cadvisor
     hostname: cadvisor
     expose:
       - "8080"
     restart: unless-stopped
-    privileged: true
-    devices:
-      - /dev/kmsg:/dev/kmsg
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker:/var/lib/docker:ro
-      - /csgroup:/csgroup:ro
+      - /dev/disk/:/dev/disk:ro
+    command:
+      - '--housekeeping_interval=30s'
+      - '--docker_only=true'
+      - '--disable_metrics=percpu,sched,tcp,udp,disk,diskIO,hugetlb,referenced_memory,cpu_topology,resctrl'
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
     networks:
       - geocluster
     labels:

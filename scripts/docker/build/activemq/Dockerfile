@@ -1,4 +1,4 @@
-FROM bellsoft/liberica-openjdk-alpine:13
+FROM bellsoft/liberica-openjdk-alpine:17.0.9
 
 LABEL maintainer="Alessio Fabiani <alessio.fabiani@geosolutionsgroup.com>"
 
