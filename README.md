@@ -24,9 +24,25 @@ docker compose up
 ```
 
 ## Scaling
-To scale up the cluster, add the docker compose snippet with appropriate environemnt variables and replacing the # with number representing geoserver node to the bottom of the [docker-compose.yml](https://github.com/CRI-lab/geoserver_cluster/blob/main/docker-compose.yml)
 
+### Quick Scaling with Script
+Use the provided scaling script for easy horizontal scaling:
+
+```bash
+# Scale up to 4 GeoServer instances
+./scripts/scale-cluster.sh up 4
+
+# Scale down to 2 GeoServer instances  
+./scripts/scale-cluster.sh down 2
+
+# Apply changes
+docker compose up -d
 ```
+
+### Manual Scaling
+You can also manually add GeoServer instances by adding the docker compose snippet with appropriate environment variables to [docker-compose.yml](docker-compose.yml):
+
+```yaml
 gs-node#:
     image: geobeyond/geoserver:2.20.6
     volumes:
@@ -35,20 +51,44 @@ gs-node#:
     ports:
       - "808#:8080"
     environment: 
-    ...
+    # ... (copy environment from existing nodes)
 ```
 
-To scale down the cluster, remove the docker compose snippet
+### Scaling Configuration
+Configure scaling parameters in your `.env` file:
+```bash
+GEOSERVER_INSTANCES=2              # Number of instances
+GEOSERVER_BASE_PORT=8081          # Starting port number
+GEOSERVER_MEMORY_LIMIT=2G         # Memory limit per instance
+GEOSERVER_MEMORY_RESERVATION=1G   # Memory reservation per instance
+GEOSERVER_CPU_LIMIT=1.0           # CPU limit per instance
+GEOSERVER_CPU_RESERVATION=0.5     # CPU reservation per instance
+```
 
 ## Services
-| Service  | Port | 
-| -------- | -------- |
-| Caddy Reverse Proxy   | 8600   |
-| Geoserver Instance 1   | 8081   |
-| Geoserver Instance 2   | 8082   |
-| Grafana Dashboard   | 3000   |
-| Prometheus   | 9090   |
-| ActiveMQ Broker | 61616   |
+| Service  | Port | Description |
+| -------- | -------- | ----------- |
+| **Caddy Load Balancer**   | 8600   | Main entry point for GeoServer cluster |
+| GeoServer Instance 1   | 8081   | First GeoServer node |
+| GeoServer Instance 2   | 8082   | Second GeoServer node |
+| PostgreSQL Database   | 25432  | PostGIS-enabled database |
+| ActiveMQ Broker | 61616   | JMS clustering coordination |
+| Grafana Dashboard   | 3000   | Monitoring visualization |
+| Prometheus   | 9090   | Metrics collection |
+
+### Health Monitoring
+Check cluster health status:
+```bash
+./scripts/health-check.sh
+```
+
+This will verify:
+- All GeoServer instances are responding
+- Load balancer is distributing requests
+- Database connectivity
+- ActiveMQ broker status
+- Monitoring services
+- Container resource usage
 
 ## Clustering using JMS Plugin
 GeoServer supports clustering using JMS cluster plugin or using the ActiveMQ-broker. 

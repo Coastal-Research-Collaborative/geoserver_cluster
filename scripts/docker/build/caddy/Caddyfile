@@ -1,6 +1,22 @@
 :8600 {
   reverse_proxy gs-node1:8080 gs-node2:8080 {
-    lb_policy      ip_hash
+    lb_policy           round_robin
+    lb_try_duration     1s
+    lb_try_interval     250ms
+    health_uri          /geoserver/web
+    health_interval     30s
+    health_timeout      5s
+    health_status       200
+  }
+  
+  header {
+    X-Forwarded-For {remote_host}
+    X-Real-IP {remote_host}
+  }
+  
+  log {
+    output stdout
+    format console
   }
 }
 
