@@ -46,7 +46,7 @@ check_prerequisites() {
     fi
     
     # Check Docker Compose
-    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+    if ! command -v docker compose &> /dev/null && ! docker compose version &> /dev/null; then
         print_error "Docker Compose is not installed. Please install Docker Compose first."
         exit 1
     fi
@@ -124,15 +124,15 @@ deploy_cluster() {
     
     # Pull latest images
     print_status "Pulling Docker images..."
-    docker-compose pull
+    docker compose pull
     
     # Build custom images if needed
     print_status "Building custom images..."
-    docker-compose build
+    docker compose build
     
     # Start the cluster
     print_status "Starting services..."
-    docker-compose up -d
+    docker compose up -d
     
     print_status "Deployment initiated ✓"
 }
@@ -148,9 +148,9 @@ wait_for_services() {
     attempt=0
     
     while [ $attempt -lt $max_attempts ]; do
-        if docker-compose ps | grep -q "Up (healthy)"; then
-            healthy_services=$(docker-compose ps | grep -c "Up (healthy)" || echo "0")
-            total_services=$(docker-compose ps | grep -c "Up" || echo "0")
+        if docker compose ps | grep -q "Up (healthy)"; then
+            healthy_services=$(docker compose ps | grep -c "Up (healthy)" || echo "0")
+            total_services=$(docker compose ps | grep -c "Up" || echo "0")
             
             print_status "Services status: $healthy_services/$total_services healthy"
             
@@ -166,7 +166,7 @@ wait_for_services() {
     done
     
     if [ $attempt -eq $max_attempts ]; then
-        print_warning "Some services may still be starting up. Check with 'docker-compose ps'"
+        print_warning "Some services may still be starting up. Check with 'docker compose ps'"
     fi
 }
 
@@ -187,11 +187,11 @@ show_access_info() {
     echo "  • ActiveMQ: admin/admin"
     echo ""
     echo -e "${BLUE}Useful Commands:${NC}"
-    echo "  • Check status: docker-compose ps"
-    echo "  • View logs: docker-compose logs -f [service_name]"
+    echo "  • Check status: docker compose ps"
+    echo "  • View logs: docker compose logs -f [service_name]"
     echo "  • Scale cluster: ./scripts/scale-cluster.sh up 4"
     echo "  • Health check: ./scripts/health-check.sh"
-    echo "  • Stop cluster: docker-compose down"
+    echo "  • Stop cluster: docker compose down"
     echo ""
 }
 
@@ -202,7 +202,7 @@ create_backup() {
     mkdir -p "$backup_dir"
     
     # Copy essential files
-    cp docker-compose.yml "$backup_dir/"
+    cp docker compose.yml "$backup_dir/"
     cp .env "$backup_dir/"
     cp -r build_data "$backup_dir/" 2>/dev/null || true
     cp -r scripts "$backup_dir/" 2>/dev/null || true
