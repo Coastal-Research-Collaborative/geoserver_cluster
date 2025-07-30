@@ -46,7 +46,6 @@ services:
 
   ### Active-MQ
   geobroker:
-    image: kartoza/activemq-docker:2.20.6
     build:
       context: ./scripts/docker/build/activemq
       dockerfile: Dockerfile
