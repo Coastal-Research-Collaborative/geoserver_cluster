@@ -15,6 +15,7 @@
     X-Forwarded-Proto {scheme}
     X-Forwarded-Host {host}
     X-Forwarded-Port {server_port}
+    Host {host}
   }
   
   log {
